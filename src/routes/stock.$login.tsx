@@ -125,6 +125,19 @@ function StockPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  // Tick every second so the warmup countdown updates
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const i = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(i);
+  }, []);
+
+  const WARMUP_MS = 5 * 60 * 1000;
+  const liveSinceMs =
+    stream?.type === "live" && stream.started_at ? new Date(stream.started_at).getTime() : 0;
+  const warmupRemainingMs = liveSinceMs ? Math.max(0, WARMUP_MS - (now - liveSinceMs)) : 0;
+  const inWarmup = warmupRemainingMs > 0;
+
   const pct = useMemo(() => {
     if (history.length < 2) return 0;
     const start = history[0].price;
