@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { TopNav } from "@/components/TopNav";
 
 function NotFoundComponent() {
   return (
@@ -72,14 +73,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "StreamStocks — Trade Twitch streamers" },
+      { name: "description", content: "Real-time fake stock market where Twitch streamers are stocks. Get SB 10,000 to start trading." },
+      { name: "author", content: "StreamStocks" },
+      { property: "og:title", content: "StreamStocks — Trade Twitch streamers" },
+      { property: "og:description", content: "Buy and sell streamer stocks based on live viewer counts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -113,6 +113,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <TopNav />
       <Outlet />
     </QueryClientProvider>
   );
