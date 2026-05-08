@@ -113,6 +113,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <TopNav />
       <Outlet />
     </QueryClientProvider>
   );
