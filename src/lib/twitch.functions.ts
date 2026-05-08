@@ -48,7 +48,7 @@ export const getTopStreams = createServerFn({ method: "GET" })
     return { gameId: typeof d.gameId === "string" ? d.gameId : "" };
   })
   .handler(async ({ data }): Promise<TwitchStream[]> => {
-    const qs = new URLSearchParams({ first: "20" });
+    const qs = new URLSearchParams({ first: "50" });
     if (data.gameId) qs.set("game_id", data.gameId);
     const streamsRes = await twitchFetch(`streams?${qs.toString()}`);
     const streams: TwitchStream[] = streamsRes.data ?? [];

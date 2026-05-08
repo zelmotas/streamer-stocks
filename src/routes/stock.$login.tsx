@@ -97,6 +97,7 @@ function StockPage() {
       return;
     }
     if (!stream || stream.type !== "live") return setToast("Streamer is offline");
+    if (inWarmup) return setToast("Trading opens 5 minutes after going live");
     setBusy(true);
     const res = await buyShares({ userId: user.id, login, qty, price, cash: profile.cash });
     setBusy(false);
@@ -124,6 +125,19 @@ function StockPage() {
     const t = setTimeout(() => setToast(null), 3500);
     return () => clearTimeout(t);
   }, [toast]);
+
+  // Tick every second so the warmup countdown updates
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const i = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(i);
+  }, []);
+
+  const WARMUP_MS = 5 * 60 * 1000;
+  const liveSinceMs =
+    stream?.type === "live" && stream.started_at ? new Date(stream.started_at).getTime() : 0;
+  const warmupRemainingMs = liveSinceMs ? Math.max(0, WARMUP_MS - (now - liveSinceMs)) : 0;
+  const inWarmup = warmupRemainingMs > 0;
 
   const pct = useMemo(() => {
     if (history.length < 2) return 0;
@@ -267,7 +281,7 @@ function StockPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={buy}
-                    disabled={busy || stream.type !== "live"}
+                    disabled={busy || stream.type !== "live" || inWarmup}
                     className="bg-bull text-bull-foreground font-semibold py-2.5 rounded-lg hover:opacity-90 transition disabled:opacity-40"
                   >
                     Buy
@@ -281,11 +295,19 @@ function StockPage() {
                   </button>
                 </div>
 
-                {stream.type !== "live" && (
+                {stream.type !== "live" ? (
                   <div className="text-xs text-muted-foreground bg-secondary/50 rounded-lg py-2 px-3">
                     Trading is paused while {stream.user_name} is offline. Any open position is auto-sold.
                   </div>
-                )}
+                ) : inWarmup ? (
+                  <div className="text-xs text-center text-muted-foreground bg-secondary/50 rounded-lg py-2 px-3">
+                    IPO warmup — buying opens in{" "}
+                    <span className="font-semibold text-foreground tabular-nums">
+                      {Math.floor(warmupRemainingMs / 60000)}:
+                      {String(Math.floor((warmupRemainingMs % 60000) / 1000)).padStart(2, "0")}
+                    </span>
+                  </div>
+                ) : null}
               </>
             )}
 
