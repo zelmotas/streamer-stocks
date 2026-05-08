@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      holdings: {
+        Row: {
+          avg_cost: number
+          id: string
+          qty: number
+          streamer_login: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_cost?: number
+          id?: string
+          qty?: number
+          streamer_login: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_cost?: number
+          id?: string
+          qty?: number
+          streamer_login?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          cash: number
+          created_at: string
+          id: string
+          net_worth: number
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          cash?: number
+          created_at?: string
+          id: string
+          net_worth?: number
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          cash?: number
+          created_at?: string
+          id?: string
+          net_worth?: number
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
