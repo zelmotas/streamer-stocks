@@ -78,9 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Real-time fake stock market where Twitch streamers are stocks. Get SB 10,000 to start trading." },
       { name: "author", content: "StreamStocks" },
       { property: "og:title", content: "StreamStocks — Trade Twitch streamers" },
-      { property: "og:description", content: "Buy and sell streamer stocks based on live viewer counts." },
+      { property: "og:description", content: "Real-time fake stock market where Twitch streamers are stocks. Get SB 10,000 to start trading." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "StreamStocks — Trade Twitch streamers" },
+      { name: "twitter:description", content: "Real-time fake stock market where Twitch streamers are stocks. Get SB 10,000 to start trading." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fc5eb16a-63d0-4933-bb5f-78502b8a2b6d/id-preview-b94a079f--6ec43296-a304-424d-b167-519d68d3767b.lovable.app-1778269120933.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fc5eb16a-63d0-4933-bb5f-78502b8a2b6d/id-preview-b94a079f--6ec43296-a304-424d-b167-519d68d3767b.lovable.app-1778269120933.png" },
     ],
     links: [
       {
