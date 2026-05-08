@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { fmtMoney, getCash, getPortfolio, getStoredPrices } from "@/lib/game";
+import { fmtMoney, getStoredPrices } from "@/lib/game";
+import { useAuth } from "@/hooks/use-auth";
+import { fetchHoldings, updateNetWorth, type DbHolding } from "@/lib/trading";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({ meta: [{ title: "Portfolio · StreamStocks" }] }),
@@ -11,32 +13,56 @@ export const Route = createFileRoute("/portfolio")({
 const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
 function PortfolioPage() {
-  const [cash, setCash] = useState(0);
-  const [rows, setRows] = useState<{ login: string; qty: number; avgCost: number; price: number }[]>([]);
+  const { user, profile, refreshProfile } = useAuth();
+  const [holdings, setHoldings] = useState<DbHolding[]>([]);
+  const [prices, setPrices] = useState<Record<string, number>>({});
+
+  const reload = useCallback(async () => {
+    if (!user) return;
+    const h = await fetchHoldings(user.id);
+    setHoldings(h);
+    setPrices(getStoredPrices());
+  }, [user]);
 
   useEffect(() => {
-    const tick = () => {
-      setCash(getCash());
-      const port = getPortfolio();
-      const prices = getStoredPrices();
-      setRows(
-        Object.entries(port).map(([login, h]) => ({
-          login,
-          qty: h.qty,
-          avgCost: h.avgCost,
-          price: prices[login] ?? h.avgCost,
-        })),
-      );
+    reload();
+    const i = setInterval(() => {
+      setPrices(getStoredPrices());
+    }, 2000);
+    const r = setInterval(reload, 8000);
+    return () => {
+      clearInterval(i);
+      clearInterval(r);
     };
-    tick();
-    const i = setInterval(tick, 2000);
-    return () => clearInterval(i);
-  }, []);
+  }, [reload]);
 
+  const cash = profile?.cash ?? 0;
+  const rows = holdings.map((h) => ({
+    login: h.streamer_login,
+    qty: h.qty,
+    avgCost: h.avg_cost,
+    price: prices[h.streamer_login] ?? h.avg_cost,
+  }));
   const stockValue = rows.reduce((a, r) => a + r.price * r.qty, 0);
   const total = cash + stockValue;
   const pieData = rows.map((r) => ({ name: r.login, value: r.price * r.qty }));
   if (cash > 0) pieData.push({ name: "Cash", value: cash });
+
+  // Periodically sync net worth
+  useEffect(() => {
+    if (!user || !profile) return;
+    updateNetWorth(user.id, total).then(refreshProfile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Math.round(total * 100)]);
+
+  if (!user) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <h1 className="text-2xl font-bold mb-2">Sign in to view your portfolio</h1>
+        <Link to="/auth" className="text-brand underline">Create an account</Link>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
