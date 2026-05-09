@@ -1,7 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { TrendingUp, Wallet, Trophy, BarChart3, LogOut, LogIn } from "lucide-react";
+import { TrendingUp, Wallet, Trophy, BarChart3, LogOut, LogIn, Palette, Check } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { fmtMoney } from "@/lib/game";
 import { useAuth } from "@/hooks/use-auth";
+import { THEMES, useTheme } from "@/hooks/use-theme";
 
 function NavLink({ to, icon: Icon, label }: { to: string; icon: typeof TrendingUp; label: string }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
