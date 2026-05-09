@@ -8,6 +8,7 @@ import { getStreamByLogin } from "@/lib/twitch.functions";
 import {
   appendPriceHistory,
   fmtMoney,
+  fmtShares,
   getPriceHistory,
   priceFromViewers,
   setStoredPrice,
@@ -268,7 +269,7 @@ function StockPage() {
               <>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">Cash</span><span>{fmtMoney(profile?.cash ?? 0)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Shares owned</span><span>{holding?.qty ?? 0}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Shares owned</span><span>{fmtShares(holding?.qty ?? 0)}</span></div>
                   {holding && holding.qty > 0 && (
                     <>
                       <div className="flex justify-between"><span className="text-muted-foreground">Avg cost</span><span>{fmtMoney(holding.avg_cost)}</span></div>
@@ -282,17 +283,68 @@ function StockPage() {
                   )}
                 </div>
 
-                <div>
-                  <label className="text-xs text-muted-foreground">Quantity</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={qty}
-                    onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="mt-1 w-full bg-input border border-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <div className="text-xs text-muted-foreground mt-1">Total: {fmtMoney(price * qty)}</div>
+                <div className="flex rounded-lg border border-border p-1 text-xs">
+                  <button
+                    onClick={() => setMode("amount")}
+                    className={`flex-1 py-1.5 rounded-md transition ${mode === "amount" ? "bg-secondary font-semibold" : "text-muted-foreground"}`}
+                  >
+                    Dollar amount
+                  </button>
+                  <button
+                    onClick={() => setMode("shares")}
+                    className={`flex-1 py-1.5 rounded-md transition ${mode === "shares" ? "bg-secondary font-semibold" : "text-muted-foreground"}`}
+                  >
+                    Shares
+                  </button>
                 </div>
+
+                {mode === "amount" ? (
+                  <div>
+                    <label className="text-xs text-muted-foreground">Amount to invest</label>
+                    <div className="relative mt-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="w-full bg-input border border-border rounded-lg pl-7 pr-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <div className="flex gap-1 mt-2">
+                      {[10, 100, 1000].map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => setAmount(String(v))}
+                          className="flex-1 text-xs py-1 rounded bg-secondary hover:bg-secondary/70"
+                        >
+                          ${v}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setAmount(String(profile?.cash.toFixed(2) ?? 0))}
+                        className="flex-1 text-xs py-1 rounded bg-secondary hover:bg-secondary/70"
+                      >
+                        Max
+                      </button>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2">≈ {fmtShares(tradeQty)} shares</div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-xs text-muted-foreground">Shares (fractional ok)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.0001"
+                      value={shares}
+                      onChange={(e) => setShares(e.target.value)}
+                      className="mt-1 w-full bg-input border border-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <div className="text-xs text-muted-foreground mt-1">Total: {fmtMoney(tradeCost)}</div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-2">
                   <button
