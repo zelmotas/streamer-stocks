@@ -33,12 +33,25 @@ function StockPage() {
   const [price, setPrice] = useState<number>(0);
   const [history, setHistory] = useState(() => getPriceHistory()[login] ?? []);
   const [flash, setFlash] = useState<"up" | "down" | null>(null);
-  const [qty, setQty] = useState(1);
+  const [mode, setMode] = useState<"amount" | "shares">("amount");
+  const [amount, setAmount] = useState<string>("100");
+  const [shares, setShares] = useState<string>("1");
   const [holding, setHolding] = useState<DbHolding | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const prevRef = useRef(0);
   const autoSoldRef = useRef(false);
+
+  const tradeQty = (() => {
+    if (mode === "amount") {
+      const a = parseFloat(amount);
+      if (!a || a <= 0 || price <= 0) return 0;
+      return a / price;
+    }
+    const s = parseFloat(shares);
+    return !s || s <= 0 ? 0 : s;
+  })();
+  const tradeCost = tradeQty * price;
 
   // load holding
   useEffect(() => {
