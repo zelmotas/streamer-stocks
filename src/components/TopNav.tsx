@@ -1,7 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { TrendingUp, Wallet, Trophy, BarChart3, LogOut, LogIn } from "lucide-react";
+import { TrendingUp, Wallet, Trophy, BarChart3, LogOut, LogIn, Palette, Check } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { fmtMoney } from "@/lib/game";
 import { useAuth } from "@/hooks/use-auth";
+import { THEMES, useTheme } from "@/hooks/use-theme";
 
 function NavLink({ to, icon: Icon, label }: { to: string; icon: typeof TrendingUp; label: string }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -37,6 +39,7 @@ export function TopNav() {
           <NavLink to="/leaderboard" icon={Trophy} label="Leaderboard" />
         </nav>
         <div className="ml-auto flex items-center gap-3">
+          <ThemePicker />
           {profile ? (
             <>
               <div className="hidden md:flex flex-col items-end leading-tight">
@@ -73,5 +76,51 @@ export function TopNav() {
         </div>
       </div>
     </header>
+  );
+}
+
+function ThemePicker() {
+  const { theme, setTheme } = useTheme();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+        aria-label="Change theme"
+        title="Change theme"
+      >
+        <Palette className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-popover shadow-lg p-2 z-40">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 py-1">Theme</div>
+          {THEMES.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => { setTheme(t.id); setOpen(false); }}
+              className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-secondary text-sm text-left"
+            >
+              <span
+                className="h-5 w-5 rounded-md border border-border shrink-0"
+                style={{ backgroundImage: t.swatch }}
+              />
+              <span className="flex-1">{t.name}</span>
+              {theme === t.id && <Check className="h-4 w-4 text-brand" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
