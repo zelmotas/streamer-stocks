@@ -33,9 +33,14 @@ const CATEGORIES = [
   { id: "", name: "All Categories" },
 ];
 
+type SortKey = "viewers_desc" | "viewers_asc" | "price_desc" | "price_asc" | "name_asc";
+
 function Market() {
   const fetchStreams = useServerFn(getTopStreams);
   const [gameId, setGameId] = useState("509658");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortKey>("viewers_desc");
+  const [minViewers, setMinViewers] = useState(0);
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["streams", gameId],
     queryFn: () => fetchStreams({ data: { gameId } }),
@@ -52,29 +57,77 @@ function Market() {
     setStoredPrices(stored);
   }, [data]);
 
+  const filtered = (data ?? [])
+    .filter((s) => {
+      if (s.viewer_count < minViewers) return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        s.user_name.toLowerCase().includes(q) ||
+        s.user_login.toLowerCase().includes(q) ||
+        s.game_name.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      switch (sort) {
+        case "viewers_asc": return a.viewer_count - b.viewer_count;
+        case "price_desc": return priceFromViewers(b.viewer_count) - priceFromViewers(a.viewer_count);
+        case "price_asc": return priceFromViewers(a.viewer_count) - priceFromViewers(b.viewer_count);
+        case "name_asc": return a.user_name.localeCompare(b.user_name);
+        default: return b.viewer_count - a.viewer_count;
+      }
+    });
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Live Market</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Top 20 streamers by viewer count · prices update every 60s
+            Top 50 streamers by viewer count · prices update every 60s
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {isFetching && <span className="text-xs text-muted-foreground">Refreshing…</span>}
-          <select
-            value={gameId}
-            onChange={(e) => setGameId(e.target.value)}
-            className="bg-input border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {isFetching && <span className="text-xs text-muted-foreground">Refreshing…</span>}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-6">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search streamer or game…"
+          className="md:col-span-5 bg-input border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <select
+          value={gameId}
+          onChange={(e) => setGameId(e.target.value)}
+          className="md:col-span-3 bg-input border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        >
+          {CATEGORIES.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortKey)}
+          className="md:col-span-2 bg-input border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="viewers_desc">Viewers ↓</option>
+          <option value="viewers_asc">Viewers ↑</option>
+          <option value="price_desc">Price ↓</option>
+          <option value="price_asc">Price ↑</option>
+          <option value="name_asc">Name A–Z</option>
+        </select>
+        <select
+          value={minViewers}
+          onChange={(e) => setMinViewers(Number(e.target.value))}
+          className="md:col-span-2 bg-input border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value={0}>Any size</option>
+          <option value={1000}>1k+ viewers</option>
+          <option value={10000}>10k+ viewers</option>
+          <option value={50000}>50k+ viewers</option>
+        </select>
       </div>
 
       {isLoading ? (
@@ -83,9 +136,11 @@ function Market() {
             <div key={i} className="h-32 rounded-xl border border-border bg-card animate-pulse" />
           ))}
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center text-muted-foreground py-16">No streamers match your filters.</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {data?.map((s) => <StreamerCard key={s.user_id} stream={s} />)}
+          {filtered.map((s) => <StreamerCard key={s.user_id} stream={s} />)}
         </div>
       )}
     </main>

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { fmtMoney, getStoredPrices } from "@/lib/game";
+import { fmtMoney, fmtShares, getStoredPrices } from "@/lib/game";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchHoldings, updateNetWorth, type DbHolding } from "@/lib/trading";
 
@@ -104,7 +104,7 @@ function PortfolioPage() {
                           {r.login}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">{r.qty}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{fmtShares(r.qty)}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{fmtMoney(r.avgCost)}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{fmtMoney(r.price)}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{fmtMoney(r.price * r.qty)}</td>
