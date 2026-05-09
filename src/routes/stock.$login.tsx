@@ -111,26 +111,29 @@ function StockPage() {
     }
     if (!stream || stream.type !== "live") return setToast("Streamer is offline");
     if (inWarmup) return setToast("Trading opens 5 minutes after going live");
+    if (tradeQty <= 0) return setToast("Enter a valid amount");
     setBusy(true);
-    const res = await buyShares({ userId: user.id, login, qty, price, cash: profile.cash });
+    const res = await buyShares({ userId: user.id, login, qty: tradeQty, price, cash: profile.cash });
     setBusy(false);
     if (!res.ok) return setToast(res.error);
     setHolding(res.holding);
     await refreshProfile();
-    setToast(`Bought ${qty} share${qty > 1 ? "s" : ""}`);
+    setToast(`Bought ${fmtShares(tradeQty)} shares for ${fmtMoney(tradeCost)}`);
     if (user) updateNetWorth(user.id, res.cash + res.holding.qty * price);
   };
 
   const sell = async () => {
     if (!user || !profile || !holding) return;
-    if (holding.qty < qty) return setToast("Not enough shares");
+    const sellQty = mode === "amount" ? tradeQty : Math.min(tradeQty, holding.qty);
+    if (sellQty <= 0) return setToast("Enter a valid amount");
+    if (holding.qty < sellQty - 1e-9) return setToast("Not enough shares");
     setBusy(true);
-    const res = await sellShares({ userId: user.id, login, qty, price, cash: profile.cash });
+    const res = await sellShares({ userId: user.id, login, qty: sellQty, price, cash: profile.cash });
     setBusy(false);
     if (!res.ok) return setToast(res.error);
     setHolding(res.holding);
     await refreshProfile();
-    setToast(`Sold ${qty} share${qty > 1 ? "s" : ""}`);
+    setToast(`Sold ${fmtShares(sellQty)} shares for ${fmtMoney(sellQty * price)}`);
   };
 
   useEffect(() => {
